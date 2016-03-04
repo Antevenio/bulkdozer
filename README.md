@@ -22,8 +22,9 @@ A cache system that must be able to:
 > Keep a copy of a any new email for a certain amount of time *(a configurable value)*<br>
 > Store a counter for every individual email, incrementing it whenever an exact copy of it is being received<br>
 > Store "groups" of emails that look very similar *(a configurable percentage)* indexed by the very first (considered new) received email.<br>
-> Have a knowledge of when a "similar" email was last received for every "group" of emails.
+> Have a knowledge of when a "similar" email was last received for every "group" of emails.<br>
 
-A scheduled task that must be able to:
+A scheduled task that periodically must be able to:
 
-> Periodically communicate with the cache system, and send "bulks" (groups of similar emails, along with counters for identical ones) when the last received similarity happened before a certain amount of time *(a configurable value)*
+> Communicate with the cache system to send "bulks" (groups of similar emails, along with counters for identical ones) when the last received similarity happened before a certain amount of time *(a configurable value)*<br>
+> Communicate with the cache system to send "bulks" when a grouped email's size execeeds certain size *(a configurable value)*<br>
