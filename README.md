@@ -19,8 +19,11 @@ The Filter will use a cache system to temporarily store emails (redis or memcach
 A cache system that must be able to:
 
 > Keep a copy of a any new email for a certain amount of time *(a configurable value)*
+
 > Store a counter for every individual email, incrementing it whenever an exact copy of it is being received
+
 > Store "groups" of emails that look very similar *(a configurable percentage)* indexed by the very first (considered new) received email.
+
 > Have a knowledge of when a "similar" email was last received for every "group" of emails.
 
 A scheduled task that must be able to:
