@@ -14,8 +14,10 @@ An email interception layer should be in charge of collecting intelligence about
 
 The Implementation
 ------------------
-The Filter is a script run as a exim pipe (Or any other smtp server software that support pipes)
+The Filter is a script run as a exim pipe (Or any other smtp server software that support pipes).
+
 The Filter will use a cache system to temporarily store emails (redis or memcached looks good for this).
+
 A cache system that must be able to:
 
 > Keep a copy of a any new email for a certain amount of time *(a configurable value)*
