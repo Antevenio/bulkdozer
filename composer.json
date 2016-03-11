@@ -1,0 +1,12 @@
+{
+    "name": "antevenio/bulkdozer",
+    "description": "A Predictive Email Filter",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Iván Mota",
+            "email": "pinfake@hotmail.com"
+        }
+    ],
+    "require": {}
+}
