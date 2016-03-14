@@ -1,15 +1,17 @@
 <?php
 namespace Bulkdozer\Cache;
 
+use Bulkdozer\Comparator\TextComparator;
 use Bulkdozer\Email;
 
 interface Cache
 {
-   /**
-     * @param Email $email
-     * @return $id | FALSE
-     */
-    public function search(Email $email);
+ /**
+  * @param Email $email
+  * @param TextComparator $comparator
+  * @return  $id | FALSE
+  */
+    public function search(Email $email, TextComparator $comparator);
 
     /**
      * @param $id

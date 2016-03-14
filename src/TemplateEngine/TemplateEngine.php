@@ -1,5 +1,5 @@
 <?php
-namespace Bulkdozer\Template;
+namespace Bulkdozer\TemplateEngine;
 
 interface TemplateEngine
 {

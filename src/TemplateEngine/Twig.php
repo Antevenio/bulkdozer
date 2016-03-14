@@ -1,7 +1,6 @@
 <?php
-namespace Bulkdozer\Template\Engine;
+namespace Bulkdozer\TemplateEngine;
 
-use Bulkdozer\Template\TemplateEngine;
 
 class Twig implements TemplateEngine
 {

@@ -5,7 +5,7 @@ use Bulkdozer\Cache\Cache;
 use Bulkdozer\Cache\StoredEmailGroup;
 use Bulkdozer\Sender\Sender;
 use BulkDozer\Storage\Storage;
-use Bulkdozer\Template\TemplateEngine;
+use Bulkdozer\TemplateEngine\TemplateEngine;
 
 class Filter
 {
@@ -13,6 +13,7 @@ class Filter
     protected $cache;
     protected $sender;
     protected $storage;
+    protected $templateEngine;
 
     public function __construct(
         Cache $cache,
