@@ -1,23 +1,30 @@
 <?php
 namespace Bulkdozer;
 
-use Bulkdozer\Cache\CacheId;
-use Bulkdozer\Cache\CacheInterface;
-use Bulkdozer\Sender\SenderInterface;
+use Bulkdozer\Cache\Cache;
+use Bulkdozer\Cache\StoredEmailGroup;
+use Bulkdozer\Sender\Sender;
+use BulkDozer\Storage\Storage;
+use Bulkdozer\Template\TemplateEngine;
 
 class Filter
 {
     const MAX_GROUP_SIZE = 10;
     protected $cache;
     protected $sender;
+    protected $storage;
 
     public function __construct(
-        CacheInterface $cache,
-        SenderInterface $sender
+        Cache $cache,
+        Sender $sender,
+        Storage $storage,
+        TemplateEngine $templateEngine
     )
     {
         $this->cache = $cache;
         $this->sender = $sender;
+        $this->storage = $storage;
+        $this->templateEngine = $templateEngine;
     }
 
     public function filter(Email $email)
@@ -26,7 +33,9 @@ class Filter
             $this->cache->add($id, $email);
             if ($this->exceedsCacheSize($id)) {
                 $group = $this->cache->retrieve($id);
-                $this->sender->send($group->getBulk());
+                $storageId = $this->storage->store($group);
+                $link = $this->storage->getShortcut($storageId);
+                $this->sendGroupSummaryEmail($group, $link);
                 $this->cache->remove($id);
             }
         } else {
@@ -35,17 +44,37 @@ class Filter
         }
     }
 
-    protected function exceedsCacheSize(CacheId $id)
+    protected function exceedsCacheSize($id)
     {
         return ($this->cache->getSize($id) > static::MAX_GROUP_SIZE);
+    }
+
+    protected function processCachedEmailGroup($id)
+    {
+        $group = $this->cache->retrieve($id);
+        $storageId = $this->storage->store($group);
+        $link = $this->storage->getShortcut($storageId);
+        $this->sendGroupSummaryEmail($group, $link);
+        $this->cache->remove($id);
+    }
+
+    protected function sendGroupSummaryEmail(StoredEmailGroup $group, $storageLink)
+    {
+        $email = $this->templateEngine->render(
+            'mailable-template.twig',
+            array(
+                'emailCount' => $group->getCount(),
+                'storageLink' => $storageLink,
+                'lastEmail' => $group->getLast()
+            )
+        );
+        $this->sender->send($email);
     }
 
     public function check()
     {
         while ($id = $this->cache->getPending()) {
-            $group = $this->cache->retrieve($id);
-            $this->cache->remove($id);
-            $this->sender->send($group->getBulk());
+            $this->processCachedEmailGroup($id);
         }
     }
 }

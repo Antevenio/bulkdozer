@@ -3,7 +3,7 @@ namespace Bulkdozer\Sender;
 
 use Bulkdozer\Email;
 
-interface SenderInterface
+interface Sender
 {
     public function send(Email $email);
 }

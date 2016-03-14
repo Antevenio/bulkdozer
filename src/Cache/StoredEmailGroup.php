@@ -12,6 +12,7 @@ class StoredEmailGroup
 
     public function __construct()
     {
+        $this->storedEmails = array();
     }
 
     public function add(StoredEmail $storedEmail)
@@ -19,13 +20,18 @@ class StoredEmailGroup
         $this->storedEmails[] = $storedEmail;
     }
 
-    public function getBulk()
+    public function getCount()
     {
-        $data = "";
-        foreach( $this->storedEmails as $storedEmail )
-        {
-            $data .= $storedEmail->getEmail()->getData();
-        }
-        return new Email($data);
+        return count($this->storedEmails);
+    }
+
+    public function getFirst()
+    {
+        return ($this->storedEmails[0]);
+    }
+
+    public function getLast()
+    {
+        return ($this->storedEmails[count($this->storedEmails)-1]);
     }
 }

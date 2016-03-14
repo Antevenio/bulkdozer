@@ -1,35 +1,34 @@
 <?php
 namespace Bulkdozer\Cache;
 
-use Bulkdozer\Cache\CacheId;
 use Bulkdozer\Email;
 
-interface CacheInterface
+interface Cache
 {
    /**
      * @param Email $email
-     * @return CacheId | FALSE
+     * @return $id | FALSE
      */
     public function search(Email $email);
 
     /**
-     * @param CacheId $id
+     * @param $id
      * @return StoredEmailGroup | FALSE
      */
-    public function retrieve(CacheId $id);
+    public function retrieve($id);
 
     /**
-     * @param CacheId $id
+     * @param $id
      * @param Email $email
      * @return mixed
      */
-    public function add(CacheId $id, Email $email);
+    public function add($id, Email $email);
 
     /**
-     * @param CacheId $id
+     * @param $id
      * @return mixed
      */
-    public function getSize(CacheId $id);
+    public function getSize($id);
 
     /**
      * @param Email $email
@@ -38,9 +37,9 @@ interface CacheInterface
     public function create(Email $email);
 
     /**
-     * @return CacheId | FALSE
+     * @return $id | FALSE
      */
     public function getPending();
 
-    public function remove(CacheId $id);
+    public function remove($id);
 }
