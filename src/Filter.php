@@ -77,7 +77,7 @@ class Filter
     public function check()
     {
         while ($id = $this->cache->getPending(static::MAX_TIME_IN_CACHE)) {
-            $this->processCachedEmailGroup($id);
+            $this->sendSummarized($id);
         }
     }
 }
