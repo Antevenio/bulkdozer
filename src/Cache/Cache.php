@@ -41,7 +41,7 @@ interface Cache
     /**
      * @return $id | FALSE
      */
-    public function getPending();
+    public function getPending($seconds);
 
     public function remove($id);
 }

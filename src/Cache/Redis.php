@@ -13,7 +13,8 @@ class Redis implements Cache
     protected $redis;
     const KEY_PREFIX = "blkdz:";
     const EMAIL_PREFIX = "email:";
-    const TIME_PREFIX = "time:";
+    const SIZE_PREFIX = "size:";
+    const LAST_UPDATE_TIME = "lut:";
 
     public function __construct()
     {
@@ -21,9 +22,7 @@ class Redis implements Cache
 
     public function search(Email $email, TextComparator $comparator)
     {
-        $it = new Keyspace($this->redis, static::KEY_PREFIX .
-            static::EMAIL_PREFIX . '*'
-        );
+        $it = new Keyspace($this->redis, $this->getEmailKeyPrefix() . '*');
         foreach ($it as $key) {
             list($cachedData) = $this->redis->lrange($key, 0, 0);
             if ($comparator->isSimilar(
@@ -45,7 +44,7 @@ class Redis implements Cache
      */
     public function retrieve($id)
     {
-        $cached = $this->redis->lrange(static::KEY_PREFIX . static::EMAIL_PREFIX . $id, 0, -1);
+        $cached = $this->redis->lrange($this->getEmailKey($id), 0, -1);
         $idx = 0;
         $storedEmailGroup = new StoredEmailGroup();
         while ($idx < count($cached)) {
@@ -64,26 +63,101 @@ class Redis implements Cache
      * @param Email $email
      * @return mixed
      */
-    public function add($id, Email $email);
+    public function add($id, Email $email)
+    {
+        $ts = time();
+        $this->redis->rpush($this->getEmailKey($id),
+            array($ts, $email->getData())
+        );
+        $this->redis->incrby($this->getSizeKey($id),
+            strlen($email->getData())
+        );
+        $this->redis->set($this->getLastUpdateTimeKey($id), $ts);
+    }
 
     /**
      * @param $id
      * @return mixed
      */
-    public function getSize($id);
+    public function getSize($id)
+    {
+        return ($this->redis->get($this->getEmailKey($id)));
+    }
 
     /**
      * @param Email $email
      * @return mixed
      */
-    public function create(Email $email);
+    public function create(Email $email)
+    {
+        $key = $this->getNewKey();
+        $this->add($key, $email);
+    }
+
+    protected function getNewKey()
+    {
+        return (uniqid('', TRUE));
+    }
+
+    protected function getKeyPrefix()
+    {
+        return (static::KEY_PREFIX);
+    }
+
+    protected function getEmailKeyPrefix()
+    {
+        return ($this->getKeyPrefix() . static::EMAIL_PREFIX);
+    }
+
+    protected function getEmailKey($key)
+    {
+        return ($this->getEmailKeyPrefix() . $key);
+    }
+
+    protected function stripEmailPrefixFromKey($key)
+    {
+        return (substr($key, strlen($this->getEmailKeyPrefix()), -1));
+    }
+
+    protected function getSizeKey($key)
+    {
+        return ($this->getKeyPrefix() . static::SIZE_PREFIX . $key);
+    }
+
+    protected function getLastUpdateTimePrefix()
+    {
+        return ($this->getKeyPrefix() . static::LAST_UPDATE_TIME);
+    }
+
+    protected function getLastUpdateTimeKey($key)
+    {
+        return ($this->getLastUpdateTimePrefix() . $key);
+    }
+
+    protected function stripLastUpdateTimePrefixFromKey($key)
+    {
+        return (substr($key, strlen($this->getLastUpdateTimePrefix()), -1));
+    }
 
     /**
      * @return $id | FALSE
      */
-    public function getPending();
+    public function getPending($seconds)
+    {
+        $it = new Keyspace($this->redis, $this->getLastUpdateTimePrefix() . '*');
+        foreach ($it as $key) {
+            $ts = $this->redis->get($key);
+            $lapse = time() - $ts;
+            if ($lapse >= $seconds) {
+                return ($this->stripLastUpdateTimePrefixFromKey($key));
+            }
+        }
 
-    public function remove($id);
+        return (FALSE);
+    }
 
-    protected function isSimilar($entry,
+    public function remove($id)
+    {
+        $this->redis->del(array($this->getEmailKey($id)));
+    }
 }
