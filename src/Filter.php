@@ -32,7 +32,6 @@ class Filter
         $this->storage = $storage;
         $this->templateEngine = $templateEngine;
         $this->textComparator = $textComparator;
-
     }
 
     public function filter(Email $email)
@@ -40,11 +39,7 @@ class Filter
         if ($id = $this->cache->search($email, $this->textComparator)) {
             $this->cache->add($id, $email);
             if ($this->exceedsCacheSize($id)) {
-                $group = $this->cache->retrieve($id);
-                $storageId = $this->storage->store($group);
-                $link = $this->storage->getShortcut($storageId);
-                $this->sendGroupSummaryEmail($group, $link);
-                $this->cache->remove($id);
+                $this->sendSummarized($id);
             }
         } else {
             $this->cache->create($email);
@@ -57,7 +52,7 @@ class Filter
         return ($this->cache->getSize($id) > static::MAX_GROUP_SIZE);
     }
 
-    protected function processCachedEmailGroup($id)
+    protected function sendSummarized($id)
     {
         $group = $this->cache->retrieve($id);
         $storageId = $this->storage->store($group);
