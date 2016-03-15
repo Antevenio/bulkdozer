@@ -3,6 +3,7 @@ namespace Bulkdozer;
 
 use Bulkdozer\Cache\Cache;
 use Bulkdozer\Cache\StoredEmailGroup;
+use Bulkdozer\Comparator\TextComparator;
 use Bulkdozer\Sender\Sender;
 use BulkDozer\Storage\Storage;
 use Bulkdozer\TemplateEngine\TemplateEngine;
@@ -10,27 +11,33 @@ use Bulkdozer\TemplateEngine\TemplateEngine;
 class Filter
 {
     const MAX_GROUP_SIZE = 10;
+    const MAX_TIME_IN_CACHE = 600;
+
     protected $cache;
     protected $sender;
     protected $storage;
     protected $templateEngine;
+    protected $textComparator;
 
     public function __construct(
         Cache $cache,
         Sender $sender,
         Storage $storage,
-        TemplateEngine $templateEngine
+        TemplateEngine $templateEngine,
+        TextComparator $textComparator
     )
     {
         $this->cache = $cache;
         $this->sender = $sender;
         $this->storage = $storage;
         $this->templateEngine = $templateEngine;
+        $this->textComparator = $textComparator;
+
     }
 
     public function filter(Email $email)
     {
-        if ($id = $this->cache->search($email)) {
+        if ($id = $this->cache->search($email, $this->textComparator)) {
             $this->cache->add($id, $email);
             if ($this->exceedsCacheSize($id)) {
                 $group = $this->cache->retrieve($id);
@@ -74,7 +81,7 @@ class Filter
 
     public function check()
     {
-        while ($id = $this->cache->getPending()) {
+        while ($id = $this->cache->getPending(static::MAX_TIME_IN_CACHE)) {
             $this->processCachedEmailGroup($id);
         }
     }
