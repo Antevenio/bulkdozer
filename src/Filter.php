@@ -3,7 +3,8 @@ namespace Bulkdozer;
 
 use Bulkdozer\Cache\Cache;
 use Bulkdozer\Cache\StoredEmailGroup;
-use Bulkdozer\Comparator\TextComparator;
+use Bulkdozer\Comparator\EmailComparator;
+use Bulkdozer\Mime\MimeParser;
 use Bulkdozer\Sender\Sender;
 use BulkDozer\Storage\Storage;
 use Bulkdozer\TemplateEngine\TemplateEngine;
@@ -18,25 +19,29 @@ class Filter
     protected $storage;
     protected $templateEngine;
     protected $textComparator;
+    protected $mimeParser;
 
     public function __construct(
         Cache $cache,
         Sender $sender,
         Storage $storage,
         TemplateEngine $templateEngine,
-        TextComparator $textComparator
+        EmailComparator $emailComparator,
+        MimeParser $mimeParser
     )
     {
         $this->cache = $cache;
         $this->sender = $sender;
         $this->storage = $storage;
         $this->templateEngine = $templateEngine;
-        $this->textComparator = $textComparator;
+        $this->emailComparator = $emailComparator;
+        $this->mimeParser = $mimeParser;
     }
 
-    public function filter(Email $email)
+    public function filter($mimeEmail)
     {
-        if ($id = $this->cache->search($email, $this->textComparator)) {
+        $email = $this->mimeParser->parse($mimeEmail);
+        if ($id = $this->cache->findSimilar($email, $this->emailComparator)) {
             $this->cache->add($id, $email);
             if ($this->exceedsCacheSize($id)) {
                 $this->sendSummarized($id);
@@ -54,7 +59,7 @@ class Filter
 
     protected function sendSummarized($id)
     {
-        $group = $this->cache->retrieve($id);
+        $group = $this->cache->getGroup($id);
         $storageId = $this->storage->store($group);
         $link = $this->storage->getShortcut($storageId);
         $this->sendGroupSummaryEmail($group, $link);

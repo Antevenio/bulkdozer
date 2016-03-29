@@ -1,7 +1,7 @@
 <?php
 namespace Bulkdozer\Cache;
 
-use Bulkdozer\Comparator\TextComparator;
+use Bulkdozer\Comparator\EmailComparator;
 use Bulkdozer\Email;
 use Predis\Collection\Iterator\Keyspace;
 
@@ -20,14 +20,14 @@ class Redis implements Cache
     {
     }
 
-    public function search(Email $email, TextComparator $comparator)
+    public function findSimilar(Email $email, EmailComparator $comparator)
     {
         $it = new Keyspace($this->redis, $this->getEmailKeyPrefix() . '*');
         foreach ($it as $key) {
-            list($cachedData) = $this->redis->lrange($key, 0, 0);
+            $cachedEmail = $this->getFirstOfGroup($key);
             if ($comparator->isSimilar(
-                $this->$email->getData(),
-                $cachedData
+                $email,
+                $cachedEmail
             )
             ) {
                 return substr($key, strlen(static::KEY_PREFIX .
@@ -42,7 +42,7 @@ class Redis implements Cache
      * @param $id
      * @return StoredEmailGroup | FALSE
      */
-    public function retrieve($id)
+    public function getGroup($id)
     {
         $cached = $this->redis->lrange($this->getEmailKey($id), 0, -1);
         $idx = 0;
@@ -56,6 +56,13 @@ class Redis implements Cache
         }
 
         return ($storedEmailGroup);
+    }
+
+    protected function getFirstOfGroup($id)
+    {
+        $cached = $this->redis->lrange($this->getEmailKey($id), 0, 0);
+
+        return new Email($cached[0]);
     }
 
     /**
